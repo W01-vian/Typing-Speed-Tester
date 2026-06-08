@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Typing Speed Tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c1:#0a0a0f;--c2:#12121a;--c3:#1a1a28;--c4:#22223a;
+  --accent:#7c6ff7;--accent2:#5de4b4;--accent3:#f7c948;--danger:#f76f6f;
+  --txt1:#f0f0ff;--txt2:#9898b8;--txt3:#5a5a7a;
+  --border:#2a2a42;--radius:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--c1);color:var(--txt1);min-height:100vh;display:flex;justify-content:center;padding:2rem 1rem;}
+.app{width:100%;max-width:720px;}
+.hdr{text-align:center;padding:2rem 0 1.5rem;}
+.hdr-title{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:var(--txt1);letter-spacing:-0.5px;}
+.hdr-title span{color:var(--accent);}
+.hdr-sub{font-size:13px;color:var(--txt2);margin-top:6px;letter-spacing:0.5px;}
+.badge-row{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.badge{font-family:'Space Mono',monospace;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--txt2);background:var(--c3);}
+.badge.active{border-color:var(--accent);color:var(--accent);background:rgba(124,111,247,0.1);}
+.card{background:var(--c2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;}
+.card-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--c3);}
+.card-label{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt2);}
+.card-icon{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.card-icon.green{background:var(--accent2);}
+.card-icon.yellow{background:var(--accent3);}
+.card-icon.red{background:var(--danger);}
+.card-body{padding:16px;}
+.instr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.instr-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--c3);border-radius:8px;border:1px solid var(--border);}
+.instr-num{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);font-weight:700;min-width:18px;}
+.instr-txt{font-size:13px;color:var(--txt2);line-height:1.5;}
+.sentence-box{position:relative;background:var(--c3);border:1px solid var(--border);border-radius:8px;padding:16px 18px;min-height:56px;}
+.sentence-text{font-family:'Space Mono',monospace;font-size:15px;color:var(--accent3);line-height:1.7;letter-spacing:0.3px;}
+.char{display:inline;}
+.char.correct{color:var(--accent2);}
+.char.wrong{color:var(--danger);text-decoration:underline;text-underline-offset:3px;}
+.char.pending{color:var(--txt2);}
+.char.cursor{position:relative;}
+.char.cursor::before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:2px;background:var(--txt1);border-radius:2px;animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.15s ease;width:0%;}
+.input-wrap{position:relative;}
+.type-input{width:100%;padding:14px 16px;background:var(--c3);border:1.5px solid var(--border);border-radius:8px;font-family:'Space Mono',monospace;font-size:14px;color:var(--txt1);outline:none;resize:none;height:60px;line-height:1.5;transition:border-color 0.2s;}
+.type-input:focus{border-color:var(--accent);}
+.type-input::placeholder{color:var(--txt3);}
+.timer-chip{font-family:'Space Mono',monospace;font-size:13px;color:var(--accent2);background:rgba(93,228,180,0.1);border:1px solid rgba(93,228,180,0.25);padding:4px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;}
+.timer-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.timer-dot.idle{animation:none;background:var(--txt3);}
+.hint-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.hint-txt{font-size:12px;color:var(--txt3);}
+.btn{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:10px 22px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all 0.15s;background:transparent;color:var(--txt2);}
+.btn:hover{border-color:var(--accent);color:var(--txt1);background:rgba(124,111,247,0.08);}
+.btn:active{transform:scale(0.97);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn.primary:hover{background:#9080ff;border-color:#9080ff;color:#fff;}
+.btn.small{font-size:12px;padding:6px 14px;}
+.results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--c3);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;}
+.stat-val{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--txt1);line-height:1;}
+.stat-val.green{color:var(--accent2);}
+.stat-val.yellow{color:var(--accent3);}
+.stat-val.red{color:var(--danger);}
+.stat-val.accent{color:var(--accent);}
+.stat-label{font-size:11px;color:var(--txt2);margin-top:6px;letter-spacing:0.5px;text-transform:uppercase;}
+.grade-banner{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:10px;border:1px solid;}
+.grade-letter{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;line-height:1;min-width:44px;text-align:center;}
+.grade-title{font-size:16px;font-weight:600;}
+.grade-sub{font-size:13px;opacity:0.75;margin-top:3px;}
+.grade-s{background:rgba(93,228,180,0.08);border-color:rgba(93,228,180,0.4);color:var(--accent2);}
+.grade-a{background:rgba(124,111,247,0.08);border-color:rgba(124,111,247,0.4);color:var(--accent);}
+.grade-b{background:rgba(247,201,72,0.08);border-color:rgba(247,201,72,0.4);color:var(--accent3);}
+.grade-c{background:rgba(247,201,72,0.06);border-color:rgba(247,201,72,0.25);color:var(--accent3);}
+.grade-d{background:rgba(247,111,111,0.08);border-color:rgba(247,111,111,0.4);color:var(--danger);}
+.wpm-bar-wrap{margin:14px 0 0;}
+.wpm-bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);margin-bottom:5px;}
+.wpm-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.wpm-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.action-row{display:flex;gap:8px;margin-top:14px;}
+.screen{display:none;}
+.screen.active{display:block;}
+.separator{display:flex;align-items:center;gap:10px;margin:10px 0;}
+.sep-line{flex:1;height:1px;background:var(--border);}
+.sep-txt{font-size:11px;color:var(--txt3);letter-spacing:0.8px;}
+@media(max-width:500px){
+  .instr-grid{grid-template-columns:1fr;}
+  .results-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-title">TYPING<span>SPEED</span>TESTER</div>
+    <div class="hdr-sub">Measure your words per minute · Track accuracy · Beat your score</div>
+    <div class="badge-row">
+      <span class="badge active" id="badge-wpm">— WPM</span>
+      <span class="badge" id="badge-acc">— % ACC</span>
+    </div>
+  </div>
+
+  <!-- TEST SCREEN -->
+  <div id="screen-test" class="screen active">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon"></div>
+        <span class="card-label">Instructions</span>
+      </div>
+      <div class="card-body">
+        <div class="instr-grid">
+          <div class="instr-item"><span class="instr-num">[1]</span><span class="instr-txt">Read the target line carefully before you begin</span></div>
+          <div class="instr-item"><span class="instr-num">[2]</span><span class="instr-txt">Type it EXACTLY — spaces and punctuation matter</span></div>
+          <div class="instr-item"><span class="instr-num">[3]</span><span class="instr-txt">Timer starts when you press your first key</span></div>
+          <div class="instr-item"><span class="instr-num">[4]</span><span class="instr-txt">Press ENTER when finished to get your score</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon yellow"></div>
+        <span class="card-label">Target line</span>
+        <div style="margin-left:auto;">
+          <button class="btn small" id="btn-shuffle">↻ New sentence</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="sentence-box">
+          <div class="sentence-text" id="sentence-display"></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green"></div>
+        <span class="card-label">Start typing</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <div class="timer-chip">
+            <div class="timer-dot idle" id="timer-dot"></div>
+            <span id="timer-disp">0.0s</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="input-wrap">
+          <input type="text" class="type-input" id="type-input"
+            placeholder="Start typing here..."
+            autocomplete="off" autocorrect="off"
+            autocapitalize="off" spellcheck="false"/>
+        </div>
+        <div class="hint-row">
+          <span class="hint-txt" id="hint-chars">0 / 0 chars</span>
+          <span class="hint-txt" id="hint-errors">0 errors</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="screen-result" class="screen">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green"></div>
+        <span class="card-label">Your results</span>
+      </div>
+      <div class="card-body">
+        <div class="results-grid">
+          <div class="stat-card">
+            <div class="stat-val accent" id="res-wpm">0</div>
+            <div class="stat-label">WPM</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val green" id="res-acc">0%</div>
+            <div class="stat-label">Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val yellow" id="res-time">0s</div>
+            <div class="stat-label">Time</div>
+          </div>
+        </div>
+        <div class="results-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="stat-card">
+            <div class="stat-val" id="res-chars">0</div>
+            <div class="stat-label">Chars typed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val red" id="res-errors">0</div>
+            <div class="stat-label">Errors</div>
+          </div>
+        </div>
+
+        <div class="separator">
+          <div class="sep-line"></div>
+          <span class="sep-txt">GRADE</span>
+          <div class="sep-line"></div>
+        </div>
+
+        <div class="grade-banner grade-b" id="grade-banner">
+          <div class="grade-letter" id="grade-letter">B</div>
+          <div>
+            <div class="grade-title" id="grade-title">Good Speed, Keep it up!</div>
+            <div class="grade-sub" id="grade-sub">40–59 WPM · You're above average</div>
+          </div>
+        </div>
+
+        <div class="wpm-bar-wrap">
+          <div class="wpm-bar-label">
+            <span>0</span><span>25</span><span>50</span><span>75</span><span>100+</span>
+          </div>
+          <div class="wpm-bar">
+            <div class="wpm-bar-fill" id="wpm-bar-fill" style="width:0%;background:var(--accent);"></div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn primary" id="btn-retry">↺ Try again</button>
+          <button class="btn" id="btn-newsentence">↻ New sentence</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const sentences = [
+  "The quick brown fox jumps over the lazy dog.",
+  "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+  "She sells seashells by the seashore on sunny summer days.",
+  "Peter Piper picked a peck of pickled peppers from a pepper patch.",
+  "I saw Susie sitting in a shoeshine shop shining shoes.",
+  "Can you keep a secret from your closest and dearest friend?",
+  "A journey of a thousand miles begins with a single step forward.",
+  "All that glitters is not gold, but every great effort shines."
+];
+
+let curSentence = "", timerInt = null, startTime = null, started = false, finished = false, lastSentenceIdx = -1;
+
+const inp        = document.getElementById('type-input');
+const sentDisp   = document.getElementById('sentence-display');
+const timerDisp  = document.getElementById('timer-disp');
+const timerDot   = document.getElementById('timer-dot');
+const progress   = document.getElementById('progress-fill');
+const hintChars  = document.getElementById('hint-chars');
+const hintErrors = document.getElementById('hint-errors');
+const screenTest = document.getElementById('screen-test');
+const screenResult = document.getElementById('screen-result');
+const badgeWpm   = document.getElementById('badge-wpm');
+const badgeAcc   = document.getElementById('badge-acc');
+
+function pickSentence() {
+  let idx;
+  do { idx = Math.floor(Math.random() * sentences.length); }
+  while (idx === lastSentenceIdx && sentences.length > 1);
+  lastSentenceIdx = idx;
+  return sentences[idx];
+}
+
+function renderSentence(typed) {
+  let html = '';
+  for (let i = 0; i < curSentence.length; i++) {
+    const ch = curSentence[i] === '<' ? '&lt;' : curSentence[i] === '>' ? '&gt;' : curSentence[i];
+    if (i < typed.length) {
+      const cls = typed[i] === curSentence[i] ? 'correct' : 'wrong';
+      html += `<span class="char ${cls}">${ch}</span>`;
+    } else if (i === typed.length) {
+      html += `<span class="char cursor">${ch}</span>`;
+    } else {
+      html += `<span class="char pending">${ch}</span>`;
+    }
+  }
+  sentDisp.innerHTML = html;
+}
+
+function startTest(sentence) {
+  curSentence = sentence;
+  started = false; finished = false;
+  inp.value = '';
+  inp.disabled = false;
+  clearInterval(timerInt);
+  timerDisp.textContent = '0.0s';
+  timerDot.className = 'timer-dot idle';
+  progress.style.width = '0%';
+  hintChars.textContent = `0 / ${curSentence.length} chars`;
+  hintErrors.textContent = '0 errors';
+  renderSentence('');
+  screenTest.classList.add('active');
+  screenResult.classList.remove('active');
+  setTimeout(() => inp.focus(), 50);
+}
+
+function stopTimer() {
+  clearInterval(timerInt);
+  timerDot.className = 'timer-dot idle';
+}
+
+function computeResults(typed, elapsed) {
+  let correct = 0, errors = 0;
+  for (let i = 0; i < typed.length; i++) {
+    if (i < curSentence.length && typed[i] === curSentence[i]) correct++;
+    else errors++;
+  }
+  const totalTyped = typed.length;
+  const acc = totalTyped > 0 ? Math.round((correct / totalTyped) * 1000) / 10 : 0;
+  const elapsedSec = elapsed / 1000;
+  const wpm = elapsedSec > 0 ? Math.round((correct * 12) / elapsedSec) : 0;
+  return { correct, errors, totalTyped, acc, elapsedSec, wpm };
+}
+
+function showResults(typed, elapsed) {
+  const r = computeResults(typed, elapsed);
+
+  document.getElementById('res-wpm').textContent   = r.wpm;
+  document.getElementById('res-acc').textContent   = r.acc.toFixed(1) + '%';
+  document.getElementById('res-time').textContent  = r.elapsedSec.toFixed(1) + 's';
+  document.getElementById('res-chars').textContent = r.totalTyped;
+  document.getElementById('res-errors').textContent = r.errors;
+  badgeWpm.textContent = r.wpm + ' WPM';
+  badgeAcc.textContent = r.acc.toFixed(1) + '% ACC';
+
+  const wpmPct = Math.min(r.wpm, 100);
+  const fill = document.getElementById('wpm-bar-fill');
+  fill.style.width = '0%';
+  setTimeout(() => { fill.style.width = wpmPct + '%'; }, 100);
+
+  let grade, gClass, gTitle, gSub, fillColor;
+  if (r.wpm >= 80) {
+    grade='S'; gClass='grade-s'; gTitle='Speed Demon! Incredible!';
+    gSub='80+ WPM · Elite typist'; fillColor='var(--accent2)';
+  } else if (r.wpm >= 60) {
+    grade='A'; gClass='grade-a'; gTitle='Excellent Typist!';
+    gSub='60–79 WPM · Well above average'; fillColor='var(--accent)';
+  } else if (r.wpm >= 40) {
+    grade='B'; gClass='grade-b'; gTitle='Good Speed, Keep it up!';
+    gSub='40–59 WPM · You\'re above average'; fillColor='var(--accent3)';
+  } else if (r.wpm >= 20) {
+    grade='C'; gClass='grade-c'; gTitle='Average — Practice More';
+    gSub='20–39 WPM · Keep practicing'; fillColor='var(--accent3)';
+  } else {
+    grade='D'; gClass='grade-d'; gTitle='Keep Practising!';
+    gSub='<20 WPM · You\'ll get there'; fillColor='var(--danger)';
+  }
+
+  fill.style.background = fillColor;
+  const banner = document.getElementById('grade-banner');
+  banner.className = 'grade-banner ' + gClass;
+  document.getElementById('grade-letter').textContent = grade;
+  document.getElementById('grade-title').textContent  = gTitle;
+  document.getElementById('grade-sub').textContent    = gSub;
+
+  const wpmEl = document.getElementById('res-wpm');
+  wpmEl.className = 'stat-val ' + (r.wpm >= 60 ? 'green' : r.wpm >= 35 ? 'yellow' : 'red');
+
+  screenTest.classList.remove('active');
+  screenResult.classList.add('active');
+}
+
+inp.addEventListener('input', () => {
+  if (finished) return;
+  const typed = inp.value;
+  if (!started && typed.length > 0) {
+    started = true;
+    startTime = Date.now();
+    timerDot.className = 'timer-dot';
+    timerInt = setInterval(() => {
+      timerDisp.textContent = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+    }, 100);
+  }
+  let errors = 0;
+  for (let i = 0; i < typed.length; i++) {
+    if (i >= curSentence.length || typed[i] !== curSentence[i]) errors++;
+  }
+  hintChars.textContent  = `${typed.length} / ${curSentence.length} chars`;
+  hintErrors.textContent = errors + ' errors';
+  progress.style.width   = Math.min(typed.length / curSentence.length * 100, 100) + '%';
+  renderSentence(typed);
+});
+
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (finished) return;
+    const typed = inp.value;
+    if (!typed.trim()) { hintChars.textContent = '⚠ Nothing typed — skipped'; return; }
+    finished = true;
+    stopTimer();
+    const elapsed = startTime ? Date.now() - startTime : 0;
+    inp.disabled = true;
+    showResults(typed, elapsed);
+  }
+});
+
+document.getElementById('btn-shuffle').addEventListener('click', () => {
+  if (started && !finished) return;
+  startTest(pickSentence());
+});
+document.getElementById('btn-retry').addEventListener('click', () => {
+  startTest(curSentence);
+});
+document.getElementById('btn-newsentence').addEventListener('click', () => {
+  startTest(pickSentence());
+});
+
+startTest(pickSentence());
+</script>
+</body>
+</html>
